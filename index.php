@@ -36,12 +36,12 @@ if (isset($_POST['register'])) {
         $sql = "INSERT INTO users (username, password) VALUES ('$reg_username', '$reg_password')";
 
         if ($connUser->query($sql) === TRUE) {
-            echo "Registration successful. <a href='#login'>Login here</a>";
+            echo "<div class='alert alert-success'>Registration successful. <a href='#login'>Login here</a></div>";
         } else {
-            echo "Error: " . $sql . "<br>" . $connUser->error;
+            echo "<div class='alert alert-danger'>Error: " . $sql . "<br>" . $connUser->error . "</div>";
         }
     } else {
-        echo "Username and password are required for registration.";
+        echo "<div class='alert alert-warning'>Username and password are required for registration.</div>";
     }
 }
 
@@ -61,13 +61,13 @@ if (isset($_POST['login'])) {
                 header("Location: index.php");
                 exit();
             } else {
-                echo "Invalid password";
+                echo "<div class='alert alert-danger'>Invalid password</div>";
             }
         } else {
-            echo "Username not found";
+            echo "<div class='alert alert-danger'>Username not found</div>";
         }
     } else {
-        echo "Username and password are required for login.";
+        echo "<div class='alert alert-warning'>Username and password are required for login.</div>";
     }
 }
 
@@ -91,9 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['temperature']) && isse
     $sql = "INSERT INTO sensor_data (nhiet_do, do_am, created_at) VALUES ('$temperature', '$humidityAir', '$time')";
 
     if ($connSensor->query($sql) === TRUE) {
-        echo "New record created successfully";
+        echo "<div class='alert alert-success'>New record created successfully</div>";
     } else {
-        echo "Error: " . $sql . "<br>" . $connSensor->error;
+        echo "<div class='alert alert-danger'>Error: " . $sql . "<br>" . $connSensor->error . "</div>";
     }
 }
 
@@ -126,89 +126,172 @@ $isLoggedIn = isset($_SESSION['username']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* CSS styles here */
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            margin-top: 30px;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-size: 1.5rem;
+            border-bottom: none;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .form-control,
+        .btn {
+            border-radius: 10px;
+        }
+
+        .btn-primary,
+        .btn-success,
+        .btn-danger {
+            border-radius: 10px;
+        }
+
+        .table {
+            margin-top: 20px;
+        }
+
+        .alert {
+            margin-top: 20px;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <?php if (!$isLoggedIn): ?>
-            <div>
-                <h2>Register</h2>
-                <form method="post" action="">
-                    <input type="text" name="reg_username" placeholder="Username" required>
-                    <input type="password" name="reg_password" placeholder="Password" required>
-                    <button type="submit" name="register">Register</button>
-                </form>
-
-                <h2 id="login">Login</h2>
-                <form method="post" action="">
-                    <input type="text" name="login_username" placeholder="Username" required>
-                    <input type="password" name="login_password" placeholder="Password" required>
-                    <button type="submit" name="login">Login</button>
-                </form>
+            <div class="card">
+                <div class="card-header">
+                    Register
+                </div>
+                <div class="card-body">
+                    <form method="post" action="">
+                        <div class="mb-3">
+                            <input type="text" name="reg_username" class="form-control" placeholder="Username" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" name="reg_password" class="form-control" placeholder="Password" required>
+                        </div>
+                        <button type="submit" name="register" class="btn btn-primary">Register</button>
+                        <form method="post" action="" class="mt-4">
+                            <button type="submit" name="logout" class="btn btn-danger">Logout</button>
+                        </form>
+                    </form>
+                    <hr>
+                    <h5 id="login">Login</h5>
+                    <form method="post" action="">
+                        <div class="mb-3">
+                            <input type="text" name="login_username" class="form-control" placeholder="Username" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" name="login_password" class="form-control" placeholder="Password"
+                                required>
+                        </div>
+                        <button type="submit" name="login" class="btn btn-primary">Login</button>
+                    </form>
+                </div>
             </div>
         <?php else: ?>
-            <div class="dashboard">
-                <h2>Sensor Dashboard</h2>
-                <div>
-                    <p><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</p>
-                    <p><strong>Humidity:</strong> <span id="humidity">Loading...</span> %</p>
-                    <p><strong>Last updated:</strong> <span id="timestamp">Loading...</span></p>
+            <div class="card">
+                <div class="card-header">
+                    Sensor Dashboard
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</p>
+                        <p><strong>Humidity:</strong> <span id="humidity">Loading...</span> %</p>
+                        <p><strong>Last updated:</strong> <span id="timestamp">Loading...</span></p>
+                    </div>
                 </div>
             </div>
 
-            <h2>Data from sensor</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Temperature</th>
-                        <th>Humidity</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    // Kết nối lại đến database cảm biến
-                    $connSensor = new mysqli($sensorServername, $sensorUsername, $sensorPassword, $sensorDbname);
+            <div class="card">
+                <div class="card-header">
+                    Data from Sensor
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Temperature</th>
+                                <th>Humidity</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Kết nối lại đến database cảm biến
+                            $connSensor = new mysqli($sensorServername, $sensorUsername, $sensorPassword, $sensorDbname);
 
-                    $sql_show = "SELECT id, nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC";
-                    $result = $connSensor->query($sql_show);
+                            $sql_show = "SELECT id, nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC";
+                            $result = $connSensor->query($sql_show);
 
-                    if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            echo "<tr>
-                                    <td>" . $row['id'] . "</td>
-                                    <td>" . $row['nhiet_do'] . "</td>
-                                    <td>" . $row['do_am'] . "</td>
-                                    <td>" . $row['created_at'] . "</td>
-                                  </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
-                    }
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    echo "<tr>
+                                            <td>" . $row['id'] . "</td>
+                                            <td>" . $row['nhiet_do'] . "</td>
+                                            <td>" . $row['do_am'] . "</td>
+                                            <td>" . $row['created_at'] . "</td>
+                                          </tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
+                            }
 
-                    $connSensor->close();
-                    ?>
-                </tbody>
-            </table>
+                            $connSensor->close();
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-            <form method="post" action="">
-                <h2>Submit Sensor Data</h2>
-                <input type="number" name="temperature" placeholder="Temperature" required>
-                <input type="number" name="humidityAir" placeholder="Humidity" required>
-                <input type="datetime-local" name="time" placeholder="Time" required>
-                <button type="submit">Submit Data</button>
-            </form>
+            <!-- <div class="card"> -->
+            <!-- <div class="card-header">
+                    Submit Sensor Data
+                </div> -->
+            <!-- <div class="card-body">
+                    <form method="post" action="">
+                        <div class="mb-3">
+                            <input type="number" name="temperature" class="form-control" placeholder="Temperature" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="number" name="humidityAir" class="form-control" placeholder="Humidity" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="datetime-local" name="time" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Submit Data</button>
+                    </form>
+                </div> -->
+            <!-- </div> -->
 
-            <form method="post" action="">
-                <button type="submit" name="logout">Logout</button>
+            <form method="post" action="" class="mt-4">
+                <button type="submit" name="logout" class="btn btn-danger">Logout</button>
             </form>
         <?php endif; ?>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function fetchLatestData() {
             fetch(window.location.href + '?latest=1')
