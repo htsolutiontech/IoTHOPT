@@ -1,9 +1,11 @@
 <?php
+session_start();
+
 // Thông tin kết nối tới MySQL database
 $servername = "localhost";
-$username = "root"; // Tên đăng nhập MySQL
-$password = "H&ptiot2024"; // Mật khẩu MySQL
-$dbname = "sensor";  // Tên database
+$username = "root";
+$password = "H&ptiot2024";
+$dbname = "sensor";
 
 // Tạo kết nối
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -13,32 +15,75 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Xử lý đăng ký người dùng
+if (isset($_POST['register'])) {
+    if (isset($_POST['reg_username']) && isset($_POST['reg_password'])) {
+        $reg_username = $conn->real_escape_string($_POST['reg_username']);
+        $reg_password = password_hash($conn->real_escape_string($_POST['reg_password']), PASSWORD_BCRYPT);
+
+        $sql = "INSERT INTO users (username, password) VALUES ('$reg_username', '$reg_password')";
+
+        if ($conn->query($sql) === TRUE) {
+            echo "Registration successful. <a href='#login'>Login here</a>";
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    } else {
+        echo "Username and password are required for registration.";
+    }
+}
+
+// Xử lý đăng nhập người dùng
+if (isset($_POST['login'])) {
+    if (isset($_POST['login_username']) && isset($_POST['login_password'])) {
+        $login_username = $conn->real_escape_string($_POST['login_username']);
+        $login_password = $conn->real_escape_string($_POST['login_password']);
+
+        $sql = "SELECT password FROM users WHERE username='$login_username'";
+        $result = $conn->query($sql);
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            if (password_verify($login_password, $row['password'])) {
+                $_SESSION['username'] = $login_username;
+                header("Location: " . $_SERVER['PHP_SELF']); // Chuyển hướng trang sau khi đăng nhập thành công
+                exit();
+            } else {
+                echo "Invalid password";
+            }
+        } else {
+            echo "Username not found";
+        }
+    } else {
+        echo "Username and password are required for login.";
+    }
+}
+
+// Xử lý đăng xuất người dùng
+if (isset($_POST['logout'])) {
+    session_destroy();
+    header("Location: " . $_SERVER['PHP_SELF']); // Chuyển hướng trang sau khi đăng xuất
+    exit();
+}
+
 // Xử lý yêu cầu để thêm dữ liệu vào bảng sensor_data
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Kiểm tra xem có nhận được các thông số temperature, humidityAir và time hay không
-    if (isset($_POST['temperature']) && isset($_POST['humidityAir']) && isset($_POST['time'])) {
-        // Lấy giá trị từ POST request
-        $temperature = $_POST['temperature'];
-        $humidityAir = $_POST['humidityAir'];
-        $time = $_POST['time'];
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['temperature']) && isset($_POST['humidityAir']) && isset($_POST['time'])) {
+    if (isset($_SESSION['username'])) {
+        $temperature = $conn->real_escape_string($_POST['temperature']);
+        $humidityAir = $conn->real_escape_string($_POST['humidityAir']);
+        $time = $conn->real_escape_string($_POST['time']);
+        $username = $conn->real_escape_string($_SESSION['username']);
 
-        // Kiểm tra và lọc dữ liệu đầu vào
-        $temperature = $conn->real_escape_string($temperature);
-        $humidityAir = $conn->real_escape_string($humidityAir);
-        $time = $conn->real_escape_string($time);
+        $sql = "INSERT INTO sensor_data (nhiet_do, do_am, created_at, username) 
+                VALUES ('$temperature', '$humidityAir', '$time', '$username')";
 
-        // Câu truy vấn SQL để chèn dữ liệu vào bảng sensor_data
-        $sql = "INSERT INTO sensor_data (nhiet_do, do_am, created_at) 
-                VALUES ('$temperature', '$humidityAir', '$time')";
-
-        // Thực hiện truy vấn và kiểm tra kết quả
         if ($conn->query($sql) === TRUE) {
             echo "New record created successfully";
         } else {
             echo "Error: " . $sql . "<br>" . $conn->error;
         }
     } else {
-        echo "Missing temperature, humidityAir, or time data.";
+        echo "You must be logged in to add data.";
     }
 }
 
@@ -53,73 +98,96 @@ if (isset($_GET['latest'])) {
     } else {
         echo json_encode(["error" => "No data found"]);
     }
-    exit(); // Kết thúc script sau khi trả về JSON
+    exit();
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Dashboard</title>
-    <link rel="stylesheet" href="style.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f4f8;
+            background-color: #f4f7f6;
             color: #333;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
-        .dashboard {
-            background: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px;
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .auth, .dashboard {
             max-width: 600px;
-            width: 100%;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
-        .dashboard h2 {
-            margin: 0;
-            color: #2c3e50;
+        .auth h3, .dashboard h2 {
+            margin-bottom: 20px;
+            color: #4CAF50;
         }
 
-        .dashboard p {
+        .auth form, .dashboard form {
+            margin-bottom: 20px;
+        }
+
+        .auth input, .dashboard input {
+            width: calc(100% - 20px);
+            padding: 10px;
             margin: 10px 0;
-            font-size: 18px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
-        .dashboard span {
-            font-weight: bold;
+        .auth button, .dashboard button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        .auth button:hover, .dashboard button:hover {
+            background-color: #45a049;
+        }
+
+        .dashboard .data p {
+            font-size: 1.1rem;
+            margin: 10px 0;
         }
 
         table {
-            width: 80%;
-            max-width: 800px;
-            margin: 20px;
+            width: 100%;
+            margin-top: 20px;
             border-collapse: collapse;
-            background: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        th, td {
+        table, th, td {
+            border: 1px solid #ddd;
             padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+            text-align: center;
         }
 
         th {
-            background-color: #3498db;
-            color: #ffffff;
+            background-color: #4CAF50;
+            color: white;
         }
 
         tr:nth-child(even) {
@@ -127,57 +195,77 @@ if (isset($_GET['latest'])) {
         }
 
         tr:hover {
-            background-color: #e0e0e0;
-        }
-
-        @media (max-width: 768px) {
-            table {
-                width: 100%;
-            }
+            background-color: #ddd;
         }
     </style>
 </head>
+
 <body>
-    <div class="dashboard">
-        <h2>Sensor Dashboard</h2>
-        <div>
-            <p><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</p>
-            <p><strong>Humidity:</strong> <span id="humidity">Loading...</span> %</p>
-            <p><strong>Last updated:</strong> <span id="timestamp">Loading...</span></p>
-        </div>
+    <div class="container">
+        <?php if (!isset($_SESSION['username'])): ?>
+            <div class="auth">
+                <h3 id="login">Login</h3>
+                <form method="POST">
+                    <input type="text" name="login_username" placeholder="Username" required>
+                    <input type="password" name="login_password" placeholder="Password" required>
+                    <button type="submit" name="login">Login</button>
+                </form>
+                <h3>Register</h3>
+                <form method="POST">
+                    <input type="text" name="reg_username" placeholder="Username" required>
+                    <input type="password" name="reg_password" placeholder="Password" required>
+                    <button type="submit" name="register">Register</button>
+                </form>
+            </div>
+        <?php else: ?>
+            <div class="dashboard">
+                <h2>Sensor Dashboard</h2>
+                <div class="data">
+                    <p><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</p>
+                    <p><strong>Humidity:</strong> <span id="humidity">Loading...</span> %</p>
+                    <p><strong>Last updated:</strong> <span id="timestamp">Loading...</span></p>
+                </div>
+                <form method="POST">
+                    <!-- <input type="number" name="temperature" placeholder="Temperature" required>
+                    <input type="number" name="humidityAir" placeholder="Humidity" required>
+                    <input type="datetime-local" name="time" required> -->
+                    <button type="submit">Add Data</button>
+                    <button type="submit" name="logout">Logout</button>
+                </form>
+            </div>
+
+            <h2 style="text-align: center;">Data from sensor</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Timestamp</th>
+                </tr>
+                <?php
+                $sql_show = "SELECT id, nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC";
+                $result = $conn->query($sql_show);
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<tr>
+                                <td>" . $row['id'] . "</td>
+                                <td>" . $row['nhiet_do'] . "</td>
+                                <td>" . $row['do_am'] . "</td>
+                                <td>" . $row['created_at'] . "</td>
+                              </tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
+                }
+                ?>
+            </table>
+        <?php endif; ?>
     </div>
-
-    <h2>Data from sensor</h2>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Temperature</th>
-            <th>Humidity</th>
-            <th>Timestamp</th>
-        </tr>
-        <?php
-        // Hiển thị dữ liệu từ bảng sensor_data
-        $sql_show = "SELECT id, nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC"; // Lấy toàn bộ dữ liệu
-        $result = $conn->query($sql_show);
-
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                echo "<tr>
-                        <td>" . $row['id'] . "</td>
-                        <td>" . $row['nhiet_do'] . "</td>
-                        <td>" . $row['do_am'] . "</td>
-                        <td>" . $row['created_at'] . "</td>
-                      </tr>";
-            }
-        } else {
-            echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
-        }
-        ?>
-    </table>
 
     <script>
         function fetchLatestData() {
-            fetch(window.location.href + '?latest=1') // Gọi chính file PHP này để lấy dữ liệu mới nhất
+            fetch(window.location.href + '?latest=1')
                 .then(response => response.json())
                 .then(data => {
                     if (!data.error) {
@@ -191,17 +279,14 @@ if (isset($_GET['latest'])) {
                 .catch(error => console.error('Error fetching data:', error));
         }
 
-        // Gọi hàm fetchLatestData mỗi 5 giây
+        // Gọi hàm fetchLatestData mỗi 5 giây để làm mới dữ liệu
         setInterval(fetchLatestData, 5000);
 
+        // Gọi hàm fetchLatestData khi trang tải xong
         window.onload = function () {
             fetchLatestData();
         };
     </script>
 </body>
-</html>
 
-<?php
-// Đóng kết nối
-$conn->close();
-?>
+</html>
