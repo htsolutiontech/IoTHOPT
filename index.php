@@ -1,51 +1,106 @@
 <?php
-// Thông tin kết nối tới MySQL database
-$servername = "localhost";
-$username = "root"; // Tên đăng nhập MySQL
-$password = "H&ptiot2024"; // Mật khẩu MySQL
-$dbname = "sensor";  // Tên database
+session_start();
 
-// Tạo kết nối
-$conn = new mysqli($servername, $username, $password, $dbname);
+// Thông tin kết nối tới MySQL database cho người dùng
+$userServername = "localhost";
+$userUsername = "root";
+$userPassword = "H&ptiot2024";
+$userDbname = "user";
+
+// Thông tin kết nối tới MySQL database cho cảm biến
+$sensorServername = "localhost";
+$sensorUsername = "root";
+$sensorPassword = "H&ptiot2024";
+$sensorDbname = "sensor";
+
+// Tạo kết nối tới database người dùng
+$connUser = new mysqli($userServername, $userUsername, $userPassword, $userDbname);
+
+// Tạo kết nối tới database cảm biến
+$connSensor = new mysqli($sensorServername, $sensorUsername, $sensorPassword, $sensorDbname);
 
 // Kiểm tra kết nối
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if ($connUser->connect_error) {
+    die("User database connection failed: " . $connUser->connect_error);
+}
+if ($connSensor->connect_error) {
+    die("Sensor database connection failed: " . $connSensor->connect_error);
 }
 
-// Xử lý yêu cầu để thêm dữ liệu vào bảng sensor_data
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Kiểm tra xem có nhận được các thông số temperature, humidityAir và time hay không
-    if (isset($_POST['temperature']) && isset($_POST['humidityAir']) && isset($_POST['time'])) {
-        // Lấy giá trị từ POST request
-        $temperature = $_POST['temperature'];
-        $humidityAir = $_POST['humidityAir'];
-        $time = $_POST['time'];
+// Xử lý đăng ký người dùng
+if (isset($_POST['register'])) {
+    if (isset($_POST['reg_username']) && isset($_POST['reg_password'])) {
+        $reg_username = $connUser->real_escape_string($_POST['reg_username']);
+        $reg_password = password_hash($connUser->real_escape_string($_POST['reg_password']), PASSWORD_BCRYPT);
 
-        // Kiểm tra và lọc dữ liệu đầu vào
-        $temperature = $conn->real_escape_string($temperature);
-        $humidityAir = $conn->real_escape_string($humidityAir);
-        $time = $conn->real_escape_string($time);
+        $sql = "INSERT INTO users (username, password) VALUES ('$reg_username', '$reg_password')";
 
-        // Câu truy vấn SQL để chèn dữ liệu vào bảng sensor_data
-        $sql = "INSERT INTO sensor_data (nhiet_do, do_am, created_at) 
-                VALUES ('$temperature', '$humidityAir', '$time')";
-
-        // Thực hiện truy vấn và kiểm tra kết quả
-        if ($conn->query($sql) === TRUE) {
-            echo "New record created successfully";
+        if ($connUser->query($sql) === TRUE) {
+            echo "Registration successful. <a href='#login'>Login here</a>";
         } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
+            echo "Error: " . $sql . "<br>" . $connUser->error;
         }
     } else {
-        echo "Missing temperature, humidityAir, or time data.";
+        echo "Username and password are required for registration.";
     }
 }
 
-// Xử lý yêu cầu AJAX để lấy giá trị mới nhất
+// Xử lý đăng nhập người dùng
+if (isset($_POST['login'])) {
+    if (isset($_POST['login_username']) && isset($_POST['login_password'])) {
+        $login_username = $connUser->real_escape_string($_POST['login_username']);
+        $login_password = $connUser->real_escape_string($_POST['login_password']);
+
+        $sql = "SELECT password FROM users WHERE username='$login_username'";
+        $result = $connUser->query($sql);
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            if (password_verify($login_password, $row['password'])) {
+                $_SESSION['username'] = $login_username;
+                header("Location: index.php");
+                exit();
+            } else {
+                echo "Invalid password";
+            }
+        } else {
+            echo "Username not found";
+        }
+    } else {
+        echo "Username and password are required for login.";
+    }
+}
+
+// Xử lý đăng xuất người dùng
+if (isset($_POST['logout'])) {
+    session_destroy();
+    header("Location: index.php");
+    exit();
+}
+
+// Xử lý thêm dữ liệu cảm biến
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['temperature']) && isset($_POST['humidityAir']) && isset($_POST['time'])) {
+    $temperature = $_POST['temperature'];
+    $humidityAir = $_POST['humidityAir'];
+    $time = $_POST['time'];
+
+    $temperature = $connSensor->real_escape_string($temperature);
+    $humidityAir = $connSensor->real_escape_string($humidityAir);
+    $time = $connSensor->real_escape_string($time);
+
+    $sql = "INSERT INTO sensor_data (nhiet_do, do_am, created_at) VALUES ('$temperature', '$humidityAir', '$time')";
+
+    if ($connSensor->query($sql) === TRUE) {
+        echo "New record created successfully";
+    } else {
+        echo "Error: " . $sql . "<br>" . $connSensor->error;
+    }
+}
+
+// Xử lý yêu cầu dữ liệu mới nhất
 if (isset($_GET['latest'])) {
     $sql_latest = "SELECT nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC LIMIT 1";
-    $result_latest = $conn->query($sql_latest);
+    $result_latest = $connSensor->query($sql_latest);
 
     if ($result_latest->num_rows > 0) {
         $latest_data = $result_latest->fetch_assoc();
@@ -53,131 +108,110 @@ if (isset($_GET['latest'])) {
     } else {
         echo json_encode(["error" => "No data found"]);
     }
-    exit(); // Kết thúc script sau khi trả về JSON
+    exit();
 }
+
+// Đóng kết nối
+$connUser->close();
+$connSensor->close();
+
+// Kiểm tra xem người dùng đã đăng nhập chưa
+$isLoggedIn = isset($_SESSION['username']);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Dashboard</title>
-    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f4f8;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .dashboard {
-            background: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .dashboard h2 {
-            margin: 0;
-            color: #2c3e50;
-        }
-
-        .dashboard p {
-            margin: 10px 0;
-            font-size: 18px;
-        }
-
-        .dashboard span {
-            font-weight: bold;
-        }
-
-        table {
-            width: 80%;
-            max-width: 800px;
-            margin: 20px;
-            border-collapse: collapse;
-            background: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #3498db;
-            color: #ffffff;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        tr:hover {
-            background-color: #e0e0e0;
-        }
-
-        @media (max-width: 768px) {
-            table {
-                width: 100%;
-            }
-        }
+        /* CSS styles here */
     </style>
 </head>
+
 <body>
-    <div class="dashboard">
-        <h2>Sensor Dashboard</h2>
-        <div>
-            <p><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</p>
-            <p><strong>Humidity:</strong> <span id="humidity">Loading...</span> %</p>
-            <p><strong>Last updated:</strong> <span id="timestamp">Loading...</span></p>
-        </div>
+    <div class="container">
+        <?php if (!$isLoggedIn): ?>
+            <div>
+                <h2>Register</h2>
+                <form method="post" action="">
+                    <input type="text" name="reg_username" placeholder="Username" required>
+                    <input type="password" name="reg_password" placeholder="Password" required>
+                    <button type="submit" name="register">Register</button>
+                </form>
+
+                <h2 id="login">Login</h2>
+                <form method="post" action="">
+                    <input type="text" name="login_username" placeholder="Username" required>
+                    <input type="password" name="login_password" placeholder="Password" required>
+                    <button type="submit" name="login">Login</button>
+                </form>
+            </div>
+        <?php else: ?>
+            <div class="dashboard">
+                <h2>Sensor Dashboard</h2>
+                <div>
+                    <p><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</p>
+                    <p><strong>Humidity:</strong> <span id="humidity">Loading...</span> %</p>
+                    <p><strong>Last updated:</strong> <span id="timestamp">Loading...</span></p>
+                </div>
+            </div>
+
+            <h2>Data from sensor</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Temperature</th>
+                        <th>Humidity</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    // Kết nối lại đến database cảm biến
+                    $connSensor = new mysqli($sensorServername, $sensorUsername, $sensorPassword, $sensorDbname);
+
+                    $sql_show = "SELECT id, nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC";
+                    $result = $connSensor->query($sql_show);
+
+                    if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            echo "<tr>
+                                    <td>" . $row['id'] . "</td>
+                                    <td>" . $row['nhiet_do'] . "</td>
+                                    <td>" . $row['do_am'] . "</td>
+                                    <td>" . $row['created_at'] . "</td>
+                                  </tr>";
+                        }
+                    } else {
+                        echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
+                    }
+
+                    $connSensor->close();
+                    ?>
+                </tbody>
+            </table>
+
+            <form method="post" action="">
+                <h2>Submit Sensor Data</h2>
+                <input type="number" name="temperature" placeholder="Temperature" required>
+                <input type="number" name="humidityAir" placeholder="Humidity" required>
+                <input type="datetime-local" name="time" placeholder="Time" required>
+                <button type="submit">Submit Data</button>
+            </form>
+
+            <form method="post" action="">
+                <button type="submit" name="logout">Logout</button>
+            </form>
+        <?php endif; ?>
     </div>
-
-    <h2>Data from sensor</h2>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Temperature</th>
-            <th>Humidity</th>
-            <th>Timestamp</th>
-        </tr>
-        <?php
-        // Hiển thị dữ liệu từ bảng sensor_data
-        $sql_show = "SELECT id, nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC"; // Lấy toàn bộ dữ liệu
-        $result = $conn->query($sql_show);
-
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                echo "<tr>
-                        <td>" . $row['id'] . "</td>
-                        <td>" . $row['nhiet_do'] . "</td>
-                        <td>" . $row['do_am'] . "</td>
-                        <td>" . $row['created_at'] . "</td>
-                      </tr>";
-            }
-        } else {
-            echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
-        }
-        ?>
-    </table>
 
     <script>
         function fetchLatestData() {
-            fetch(window.location.href + '?latest=1') // Gọi chính file PHP này để lấy dữ liệu mới nhất
+            fetch(window.location.href + '?latest=1')
                 .then(response => response.json())
                 .then(data => {
                     if (!data.error) {
@@ -191,17 +225,19 @@ if (isset($_GET['latest'])) {
                 .catch(error => console.error('Error fetching data:', error));
         }
 
-        // Gọi hàm fetchLatestData mỗi 5 giây
-        setInterval(fetchLatestData, 5000);
+        function timedRefresh(timeoutPeriod) {
+            setTimeout(function () {
+                location.reload(true);
+            }, timeoutPeriod);
+        }
 
         window.onload = function () {
-            fetchLatestData();
-        };
+            if (document.getElementById('temperature')) {
+                fetchLatestData();
+                timedRefresh(5000); // Refresh every 5 seconds
+            }
+        }
     </script>
 </body>
-</html>
 
-<?php
-// Đóng kết nối
-$conn->close();
-?>
+</html>
