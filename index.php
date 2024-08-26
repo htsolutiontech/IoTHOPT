@@ -4,13 +4,13 @@ session_start();
 // Thông tin kết nối tới MySQL database cho người dùng
 $userServername = "localhost";
 $userUsername = "root";
-$userPassword = "H&ptiot2024";
+$userPassword = "NULL";
 $userDbname = "user";
 
 // Thông tin kết nối tới MySQL database cho cảm biến
 $sensorServername = "localhost";
 $sensorUsername = "root";
-$sensorPassword = "H&ptiot2024";
+$sensorPassword = "NULL";
 $sensorDbname = "sensor";
 
 // Tạo kết nối tới database người dùng
@@ -127,55 +127,11 @@ $isLoggedIn = isset($_SESSION['username']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            margin-top: 30px;
-        }
-
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-
-        .card-header {
-            background-color: #007bff;
-            color: white;
-            font-size: 1.5rem;
-            border-bottom: none;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .form-control,
-        .btn {
-            border-radius: 10px;
-        }
-
-        .btn-primary,
-        .btn-success,
-        .btn-danger {
-            border-radius: 10px;
-        }
-
-        .table {
-            margin-top: 20px;
-        }
-
-        .alert {
-            margin-top: 20px;
-        }
-    </style>
+    <link href="Backend/styles.css" rel="stylesheet">
 </head>
 
 <body>
+    <img src="Backend/XENON.jpg" alt="">
     <div class="container">
         <?php if (!$isLoggedIn): ?>
             <div class="card">
@@ -191,9 +147,6 @@ $isLoggedIn = isset($_SESSION['username']);
                             <input type="password" name="reg_password" class="form-control" placeholder="Password" required>
                         </div>
                         <button type="submit" name="register" class="btn btn-primary">Register</button>
-                        <form method="post" action="" class="mt-4">
-                            <button type="submit" name="logout" class="btn btn-danger">Logout</button>
-                        </form>
                     </form>
                     <hr>
                     <h5 id="login">Login</h5>
@@ -251,8 +204,7 @@ $isLoggedIn = isset($_SESSION['username']);
                                             <td>" . $row['id'] . "</td>
                                             <td>" . $row['nhiet_do'] . "</td>
                                             <td>" . $row['do_am'] . "</td>
-                                            <td>" . $row['created_at'] . "</td>
-                                          </tr>";
+                                            <td>" . $row['created_at'] . "</td>";
                                 }
                             } else {
                                 echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
@@ -265,26 +217,6 @@ $isLoggedIn = isset($_SESSION['username']);
                 </div>
             </div>
 
-            <!-- <div class="card"> -->
-            <!-- <div class="card-header">
-                    Submit Sensor Data
-                </div> -->
-            <!-- <div class="card-body">
-                    <form method="post" action="">
-                        <div class="mb-3">
-                            <input type="number" name="temperature" class="form-control" placeholder="Temperature" required>
-                        </div>
-                        <div class="mb-3">
-                            <input type="number" name="humidityAir" class="form-control" placeholder="Humidity" required>
-                        </div>
-                        <div class="mb-3">
-                            <input type="datetime-local" name="time" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-success">Submit Data</button>
-                    </form>
-                </div> -->
-            <!-- </div> -->
-
             <form method="post" action="" class="mt-4">
                 <button type="submit" name="logout" class="btn btn-danger">Logout</button>
             </form>
@@ -292,35 +224,7 @@ $isLoggedIn = isset($_SESSION['username']);
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function fetchLatestData() {
-            fetch(window.location.href + '?latest=1')
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.error) {
-                        document.getElementById('temperature').textContent = data.nhiet_do;
-                        document.getElementById('humidity').textContent = data.do_am;
-                        document.getElementById('timestamp').textContent = data.created_at;
-                    } else {
-                        console.error("No data found");
-                    }
-                })
-                .catch(error => console.error('Error fetching data:', error));
-        }
-
-        function timedRefresh(timeoutPeriod) {
-            setTimeout(function () {
-                location.reload(true);
-            }, timeoutPeriod);
-        }
-
-        window.onload = function () {
-            if (document.getElementById('temperature')) {
-                fetchLatestData();
-                timedRefresh(5000); // Refresh every 5 seconds
-            }
-        }
-    </script>
+    <script src="Backend/script.js"></script>
 </body>
 
 </html>
