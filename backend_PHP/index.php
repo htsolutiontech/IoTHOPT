@@ -4,13 +4,13 @@ session_start();
 // Thông tin kết nối tới MySQL database cho người dùng
 $userServername = "localhost";
 $userUsername = "root";
-$userPassword = "H&ptiot2024";
+$userPassword = "NULL";
 $userDbname = "user";
 
 // Thông tin kết nối tới MySQL database cho cảm biến
 $sensorServername = "localhost";
 $sensorUsername = "root";
-$sensorPassword = "H&ptiot2024";
+$sensorPassword = "NULL";
 $sensorDbname = "sensor";
 
 // Tạo kết nối tới database người dùng
@@ -79,12 +79,16 @@ if (isset($_POST['logout'])) {
 }
 
 // Xử lý thêm dữ liệu cảm biến
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['temperature']) && isset($_POST['humidity']) && isset($_POST['time'])) {
-    $temperature = $connSensor->real_escape_string($_POST['temperature']);
-    $humidity = $connSensor->real_escape_string($_POST['humidity']);
-    $time = $connSensor->real_escape_string($_POST['time']);
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['temperature']) && isset($_POST['humidityAir']) && isset($_POST['time'])) {
+    $temperature = $_POST['temperature'];
+    $humidityAir = $_POST['humidityAir'];
+    $time = $_POST['time'];
 
-    $sql = "INSERT INTO sensor_data (nhiet_do, do_am, created_at) VALUES ('$temperature', '$humidity', '$time')";
+    $temperature = $connSensor->real_escape_string($temperature);
+    $humidityAir = $connSensor->real_escape_string($humidityAir);
+    $time = $connSensor->real_escape_string($time);
+
+    $sql = "INSERT INTO sensor_data (nhiet_do, do_am, created_at) VALUES ('$temperature', '$humidityAir', '$time')";
 
     if ($connSensor->query($sql) === TRUE) {
         echo "<div class='alert alert-success'>New record created successfully</div>";
@@ -106,26 +110,6 @@ if (isset($_GET['latest'])) {
     }
     exit();
 }
-
-
-// if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['updateTable'])) {
-//     $sql_show = "SELECT id, nhiet_do, do_am, created_at FROM sensor_data ORDER BY created_at DESC";
-//     $result = $connSensor->query($sql_show);
-
-//     if ($result->num_rows > 0) {
-//         while ($row = $result->fetch_assoc()) {
-//             echo "<tr>
-//                     <td>" . $row['id'] . "</td>
-//                     <td>" . $row['nhiet_do'] . "</td>
-//                     <td>" . $row['do_am'] . "</td>
-//                     <td>" . $row['created_at'] . "</td>
-//                   </tr>";
-//         }
-//     } else {
-//         echo "<tr><td colspan='4'>No data found in the database.</td></tr>";
-//     }
-//     exit();
-// }
 
 // Đóng kết nối
 $connUser->close();
@@ -179,7 +163,6 @@ $isLoggedIn = isset($_SESSION['username']);
                 </div>
             </div>
         <?php else: ?>
-
             <div class="card">
                 <div class="card-header">
                     Sensor Dashboard
