@@ -114,7 +114,7 @@ void loop() {
       char timeString[20];
       strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", &timeinfo);
       String currentTime = String(timeString);
-
+  
       // In dữ liệu ra Serial Monitor
       Serial.print("Temperature: ");
       Serial.println(temperature);
