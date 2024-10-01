@@ -1,24 +1,25 @@
 #ifndef SHT30_H
 #define SHT30_H
 
-#include <Wire.h>
 
-class SHT30
+#include <stdint.h>
+#include <stdbool.h>
+
+#define DEFAULT_ADDRESS 0x44
+#define COMMAND_MEASUREMENT_HIGH_REPEATABILITY 0x24
+
+typedef struct 
 {
-public:
-    SHT30();                // địa chỉ mặc định, không cần gán
-    SHT30(uint8_t address); // gán địa chỉ khác nếu có
-    void begin(uint8_t address, TwoWire *wire = &Wire);
-    float readTemperature();
-    float readHumidity();
+    uint8_t address;
+    void (*begin)(uint8_t address);
+    float temperature;
+    float humidity;
+} SHT30;
 
-private:
-    uint8_t _address;
-    TwoWire *_wire;
-    float _temperature;
-    float _humidity;
-
-    bool readData();
-};
+// Function prototypes
+void SHT30_init(SHT30 *sensor, uint8_t address);
+void SHT30_begin(SHT30 *sensor);
+float SHT30_readTemperature(SHT30 *sensor);
+float SHT30_readHumidity(SHT30 *sensor);
 
 #endif
