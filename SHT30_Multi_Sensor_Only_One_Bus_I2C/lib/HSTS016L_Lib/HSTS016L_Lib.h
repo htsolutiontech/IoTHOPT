@@ -8,7 +8,7 @@
 
 #include <Arduino.h>
 
-#define DEFAULT_R 100
+#define DEFAULT_R 1000
 #define DEFAULT_Q 0.1
 #define ADC_RESOLUTION 4095
 #define SUPPLY_VOLTAGE 3300

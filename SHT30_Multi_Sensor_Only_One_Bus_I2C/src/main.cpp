@@ -5,6 +5,9 @@ void setup()
 {
   Serial.begin(9600);
 
+  EEPROM_Setup();
+  Handler_EEP_Setup();
+
   SHT30_Setup();
 
   GPS_Neo_Init();
@@ -15,16 +18,16 @@ void setup()
 
   HSTS016L_Setup();
 
-  delay(2000);
+  displayActiveTime();
 }
 
 void loop()
 {
-
   read_And_Check_Current();
 
-  uint32_t currentMillis = millis();
-  
+  update_Light_State();
+
+  uint16_t currentMillis = millis();
   if (currentMillis - lastMillis >= interval)
   {
     lastMillis = currentMillis;

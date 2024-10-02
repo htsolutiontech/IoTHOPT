@@ -1,22 +1,23 @@
 #include <NTP_Time_Setup.h>
 
-
 const char *ntpServer1 = "pool.ntp.org";
 const char *ntpServer2 = "time.nist.gov";
 const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0;
 
-
-void set_Up_NTP_Time() {
+void set_Up_NTP_Time()
+{
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
-  while (!time(nullptr)) {
+  while (!time(nullptr))
+  {
     delay(500);
     Serial.print(".");
   }
   Serial.println("Time synced successfully");
 }
 
-String get_Current_Time() {
+String get_Current_Time()
+{
   time_t now;
   struct tm timeinfo;
 

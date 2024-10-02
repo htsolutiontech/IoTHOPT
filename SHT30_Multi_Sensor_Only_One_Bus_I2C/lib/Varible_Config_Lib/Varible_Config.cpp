@@ -1,6 +1,7 @@
 #include <Varible_Config.h>
 
 SHT30 _sensor;
+
 HSTS016L_Config_t sensorConfig;
 
 uint32_t interval = 5000;
@@ -21,8 +22,6 @@ double longitude = 0.0;
 float nowCurrent = 0.0;
 
 String currentTime;
-
-volatile boolean time_Flag = false;
 
 void selectChannel(uint8_t bus)
 {
@@ -53,8 +52,8 @@ void read_And_Check_Current()
 {
     nowCurrent = HSTS016L_ReadDCCurrent(&sensorConfig, NUM_SAMPLES, SAMPLE_INTERVAL, ANALOG_OFFSET);
 
-    time_Flag = (nowCurrent >= 10);
-};
+    time_Flag = (nowCurrent >= OPR_CURRENT_THRESHOLD);
+}
 
 void read_Temp_And_Humi()
 {
@@ -69,7 +68,7 @@ void read_Temp_And_Humi()
     selectChannel(4);
     temperature3 = SHT30_readTemperature(&_sensor);
     humidity3 = SHT30_readHumidity(&_sensor);
-};
+}
 
 void read_Lat_And_Long()
 {
@@ -78,15 +77,18 @@ void read_Lat_And_Long()
         latitude = _gps.location.lat();
         longitude = _gps.location.lng();
     }
-};
+}
 
 void read_Real_Time()
 {
     currentTime = get_Current_Time();
-};
+}
 
 void print_Data_Var()
 {
+
+    displayActiveTime();
+    
     Serial.print("Temperature1: ");
     Serial.print(temperature1);
     Serial.print(" °C, Humidity1: ");
@@ -112,10 +114,13 @@ void print_Data_Var()
     Serial.print(longitude, 6);
     Serial.print(", Time Flag: ");
     Serial.print(time_Flag);
+    Serial.print(", Operation Time: " + OPR_Time);
     Serial.println(", Current Time: " + currentTime);
-};
+
+}
 
 void update_Data_To_Server()
 {
-    upload_Data(temperature1, humidity1, temperature2, humidity2, temperature3, humidity3, nowCurrent, latitude, longitude, time_Flag, currentTime);
-};
+    upload_Data(temperature1, humidity1, temperature2, humidity2, temperature3, humidity3, 
+                        nowCurrent, latitude, longitude, time_Flag, OPR_Time, currentTime);
+}
