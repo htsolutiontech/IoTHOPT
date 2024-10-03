@@ -41,5 +41,6 @@ void loop()
     print_Data_Var();
 
     update_Data_To_Server();
+    
   }
 }

@@ -14,6 +14,10 @@ extern hw_timer_t *timer;
 
 extern String OPR_Time;
 
+extern uint32_t on_Off_Light_Count;
+
+extern const uint8_t COUNT_ON_OFF_LIGHT_ADDRESS;
+
 extern void displayActiveTime();
 
 extern void EEPROM_Setup();

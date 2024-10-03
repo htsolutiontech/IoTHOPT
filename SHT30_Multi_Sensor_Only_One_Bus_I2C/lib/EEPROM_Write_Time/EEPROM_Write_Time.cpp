@@ -6,6 +6,9 @@ bool isStarted = false;
 volatile boolean time_Flag = false;
 String OPR_Time;
 
+uint32_t on_Off_Light_Count = 0;
+const uint8_t COUNT_ON_OFF_LIGHT_ADDRESS = sizeof(t_Store_OPR_Time);
+
 hw_timer_t *timer = timerBegin(0, 80, true);
 
 void displayActiveTime()
@@ -26,11 +29,13 @@ void EEPROM_Setup()
 {
   EEPROM.begin(512);
   EEPROM.get(0, t_Store_OPR_Time);
+  EEPROM.get(COUNT_ON_OFF_LIGHT_ADDRESS, on_Off_Light_Count);
 }
 
 void saveTime()
 {
   EEPROM.put(0, t_Store_OPR_Time);
+  EEPROM.put(COUNT_ON_OFF_LIGHT_ADDRESS, on_Off_Light_Count);
   EEPROM.commit();
   isSaved = true;
   isStarted = false;
@@ -56,6 +61,7 @@ void update_Light_State()
   if (time_Flag && !isStarted)
   {
     isStarted = true;
+    on_Off_Light_Count ++;
     Serial.println("___THE LIGHT ON___");
   }
 

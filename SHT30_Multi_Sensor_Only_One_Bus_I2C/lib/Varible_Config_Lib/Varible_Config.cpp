@@ -1,5 +1,6 @@
 #include <Varible_Config.h>
 
+
 SHT30 _sensor;
 
 HSTS016L_Config_t sensorConfig;
@@ -20,6 +21,7 @@ double latitude = 0.0;
 double longitude = 0.0;
 
 float nowCurrent = 0.0;
+float nowPower = 0.0;
 
 String currentTime;
 
@@ -53,6 +55,7 @@ void read_And_Check_Current()
     nowCurrent = HSTS016L_ReadDCCurrent(&sensorConfig, NUM_SAMPLES, SAMPLE_INTERVAL, ANALOG_OFFSET);
 
     time_Flag = (nowCurrent >= OPR_CURRENT_THRESHOLD);
+
 }
 
 void read_Temp_And_Humi()
@@ -68,6 +71,8 @@ void read_Temp_And_Humi()
     selectChannel(4);
     temperature3 = SHT30_readTemperature(&_sensor);
     humidity3 = SHT30_readHumidity(&_sensor);
+
+    read_Machine_Power();
 }
 
 void read_Lat_And_Long()
@@ -82,6 +87,11 @@ void read_Lat_And_Long()
 void read_Real_Time()
 {
     currentTime = get_Current_Time();
+}
+
+void read_Machine_Power() {
+    nowPower = OPR_VOLTAGE * nowCurrent;
+
 }
 
 void print_Data_Var()
@@ -105,22 +115,31 @@ void print_Data_Var()
     Serial.print(humidity3);
     Serial.println(" %, ");
 
-    Serial.print(F("Current: "));
-    Serial.print(nowCurrent);
-    Serial.print(" A");
-    Serial.print(F(", Latitude: "));
+    Serial.print(F("Latitude: "));
     Serial.print(latitude, 6);
     Serial.print(F(", Longitude: "));
     Serial.print(longitude, 6);
-    Serial.print(", Time Flag: ");
-    Serial.print(time_Flag);
-    Serial.print(", Operation Time: " + OPR_Time);
-    Serial.println(", Current Time: " + currentTime);
+    Serial.print(F(", Current: "));
+    Serial.print(nowCurrent);
+    Serial.print(" A");
+    Serial.print(F(", Power: "));
+    Serial.print(nowPower);
+    Serial.print(" W");
+    Serial.print(", Operation Flag: ");
+    Serial.println(time_Flag);
 
+    Serial.print("Operation Time: " + OPR_Time);
+    Serial.print(", Total Number of Light On/Off Events: ");
+    Serial.print(on_Off_Light_Count);
+    Serial.println(", Current Time: " + currentTime);
+    
 }
 
 void update_Data_To_Server()
 {
     upload_Data(temperature1, humidity1, temperature2, humidity2, temperature3, humidity3, 
-                        nowCurrent, latitude, longitude, time_Flag, OPR_Time, currentTime);
+                nowCurrent, nowPower, latitude, longitude, on_Off_Light_Count, time_Flag, OPR_Time, currentTime);
+
+    Serial.println("==================================================================================================================================");
+
 }

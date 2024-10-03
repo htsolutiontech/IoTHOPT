@@ -18,9 +18,11 @@
 #define CALIB_PIN 39
 #define NUM_SAMPLES 4000
 #define SAMPLE_INTERVAL 200
-#define ANALOG_OFFSET 7.0
+#define ANALOG_OFFSET 7.5
 
 #define OPR_CURRENT_THRESHOLD 2
+
+#define OPR_VOLTAGE 14.7
 
 extern HSTS016L_Config_t sensorConfig;
 extern SHT30 _sensor;
@@ -41,6 +43,7 @@ extern double latitude;
 extern double longitude;
 
 extern float nowCurrent;
+extern float nowPower;
 
 extern String currentTime;
 
@@ -63,5 +66,7 @@ extern void read_Real_Time();
 extern void print_Data_Var();
 
 extern void update_Data_To_Server();
+
+extern void read_Machine_Power();
 
 #endif // ___Varible_Config___
