@@ -11,7 +11,7 @@ extern const char *ntpServer2;
 extern const long gmtOffset_sec;
 extern const int daylightOffset_sec;
 
-extern void set_Up_NTP_Time();
+extern void NTP_Time_Init();
 
 extern String get_Current_Time();
 

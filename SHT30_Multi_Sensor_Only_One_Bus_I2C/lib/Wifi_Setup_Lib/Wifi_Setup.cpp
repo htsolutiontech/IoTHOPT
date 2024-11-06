@@ -3,7 +3,7 @@
 const char *ssid = "HOPT_TẦNG 2";
 const char *password = "H@pt2020";
 
-void set_Up_Wifi() {
+void Wifi_Init() {
   WiFi.mode(WIFI_OFF);
   delay(1000);
   WiFi.mode(WIFI_STA);
@@ -19,4 +19,6 @@ void set_Up_Wifi() {
   Serial.println(ssid);
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
+  Serial.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
+   
 }

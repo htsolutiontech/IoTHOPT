@@ -4,9 +4,8 @@
 
 #include <EEPROM.h>
 
-extern uint32_t t_Store_OPR_Time;
-extern bool isSaved;
-extern bool isStarted;
+extern uint64_t t_Store_OPR_Time;
+extern volatile boolean last_time_Flag;
 
 extern volatile boolean time_Flag;
 
@@ -20,11 +19,11 @@ extern const uint8_t COUNT_ON_OFF_LIGHT_ADDRESS;
 
 extern void displayActiveTime();
 
-extern void EEPROM_Setup();
+extern void EEPROM_Init();
 
 extern void saveTime();
 
-extern void Handler_EEP_Setup();
+extern void EEPROMTimeHandler_Init();
 
 extern void IRAM_ATTR count_OPR_Time();
 

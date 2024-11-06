@@ -5,7 +5,7 @@ const char *ntpServer2 = "time.nist.gov";
 const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0;
 
-void set_Up_NTP_Time()
+void NTP_Time_Init()
 {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
   while (!time(nullptr))
@@ -14,6 +14,7 @@ void set_Up_NTP_Time()
     Serial.print(".");
   }
   Serial.println("Time synced successfully");
+  Serial.println();
 }
 
 String get_Current_Time()

@@ -3,35 +3,50 @@
 
 void setup()
 {
-  Serial.begin(9600);
+  beginSerialCommunication();
 
-  EEPROM_Setup();
-  Handler_EEP_Setup();
+  Wifi_Init();
 
-  SHT30_Setup();
+  NTP_Time_Init();
+
+  EEPROM_Init();
+
+  EEPROMTimeHandler_Init();
 
   GPS_Neo_Init();
 
-  set_Up_Wifi();
+  HSTS016L_Init();
 
-  set_Up_NTP_Time();
-
-  HSTS016L_Setup();
+  SHT30_Init();
 
   displayActiveTime();
 }
 
 void loop()
 {
-  read_And_Check_Current();
 
-  update_Light_State();
+  uint16_t currentMillis_2 = millis();
+  if (currentMillis_2 - lastMillis_2 >= interval_2)
+  {
+    lastMillis_2 = currentMillis_2;
+
+    read_And_Check_Current(); 
+
+    update_Light_State();
+    
+  }
+
 
   uint16_t currentMillis = millis();
   if (currentMillis - lastMillis >= interval)
   {
     lastMillis = currentMillis;
 
+    if (time_Flag)
+    {
+      saveTime();
+    }
+    
     read_Lat_And_Long();
 
     read_Real_Time();
@@ -43,4 +58,5 @@ void loop()
     update_Data_To_Server();
     
   }
+
 }

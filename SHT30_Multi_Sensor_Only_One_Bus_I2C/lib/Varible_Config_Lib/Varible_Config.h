@@ -16,11 +16,12 @@
 
 #define CURRENT_PIN 36
 #define CALIB_PIN 39
+
 #define NUM_SAMPLES 4000
 #define SAMPLE_INTERVAL 200
-#define ANALOG_OFFSET 7.5
+#define CURRENT_OFFSET 0.5
 
-#define OPR_CURRENT_THRESHOLD 2
+#define OPR_CURRENT_THRESHOLD 10
 
 #define OPR_VOLTAGE 14.7
 
@@ -29,6 +30,9 @@ extern SHT30 _sensor;
 
 extern uint32_t interval;
 extern uint32_t lastMillis;
+
+extern uint32_t interval_2;
+extern uint32_t lastMillis_2;
 
 extern float temperature1;
 extern float humidity1;
@@ -47,13 +51,13 @@ extern float nowPower;
 
 extern String currentTime;
 
-
+extern void beginSerialCommunication();
 
 extern void selectChannel(uint8_t bus);
 
-extern void SHT30_Setup();
+extern void SHT30_Init();
 
-extern void HSTS016L_Setup();
+extern void HSTS016L_Init();
 
 extern void read_And_Check_Current();
 

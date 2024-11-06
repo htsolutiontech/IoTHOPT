@@ -8,6 +8,9 @@ HSTS016L_Config_t sensorConfig;
 uint32_t interval = 5000;
 uint32_t lastMillis = 0;
 
+uint32_t interval_2 = 500;
+uint32_t lastMillis_2 = 0;
+
 float temperature1 = 0.0;
 float humidity1 = 0.0;
 
@@ -25,6 +28,13 @@ float nowPower = 0.0;
 
 String currentTime;
 
+unsigned long lastChangeTime = 0; 
+const unsigned long duration = 50; 
+
+void beginSerialCommunication() {
+    Serial.begin(9600);
+}
+
 void selectChannel(uint8_t bus)
 {
     Wire.beginTransmission(0x70); // TCA9548A address is 0x70
@@ -33,14 +43,14 @@ void selectChannel(uint8_t bus)
     // Serial.println(bus);
 }
 
-void SHT30_Setup()
+void SHT30_Init()
 {
     Wire.begin(I2C_SDA, I2C_SCL);
     SHT30_init(&_sensor, 0x44);
     SHT30_begin(&_sensor);
 }
 
-void HSTS016L_Setup()
+void HSTS016L_Init()
 {
     HSTS016L_Init(&sensorConfig, CURRENT_PIN, CALIB_PIN, DEFAULT_R, DEFAULT_Q);
 
@@ -52,7 +62,12 @@ void HSTS016L_Setup()
 
 void read_And_Check_Current()
 {
-    nowCurrent = HSTS016L_ReadDCCurrent(&sensorConfig, NUM_SAMPLES, SAMPLE_INTERVAL, ANALOG_OFFSET);
+    nowCurrent = HSTS016L_ReadDCCurrent(&sensorConfig, NUM_SAMPLES, SAMPLE_INTERVAL, CURRENT_OFFSET);
+
+    if (nowCurrent <= 15)
+    {
+      nowCurrent = 0;
+    }
 
     time_Flag = (nowCurrent >= OPR_CURRENT_THRESHOLD);
 
@@ -64,11 +79,11 @@ void read_Temp_And_Humi()
     temperature1 = SHT30_readTemperature(&_sensor);
     humidity1 = SHT30_readHumidity(&_sensor);
 
-    selectChannel(3);
+    selectChannel(4);
     temperature2 = SHT30_readTemperature(&_sensor);
     humidity2 = SHT30_readHumidity(&_sensor);
 
-    selectChannel(4);
+    selectChannel(7);
     temperature3 = SHT30_readTemperature(&_sensor);
     humidity3 = SHT30_readHumidity(&_sensor);
 

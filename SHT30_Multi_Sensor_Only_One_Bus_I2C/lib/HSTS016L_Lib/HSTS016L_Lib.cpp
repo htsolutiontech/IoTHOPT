@@ -5,6 +5,9 @@
 
 #include "HSTS016L_Lib.h"
 
+float currentFiltered = 0.0;
+float calibFiltered = 0.0;
+
 
 void HSTS016L_Init(HSTS016L_Config_t *config, uint8_t currentPin, uint8_t calibPin, float rValue, float qValue) {
     config->currentPin = currentPin;
@@ -50,7 +53,7 @@ float HSTS016L_KalmanUpdateCalib(HSTS016L_Config_t *config, uint16_t inputData) 
 }
 
 
-float HSTS016L_ReadDCCurrent(HSTS016L_Config_t *config, uint16_t numSamples, uint16_t sampleInterval, float analogOffset) {
+float HSTS016L_ReadDCCurrent(HSTS016L_Config_t *config, uint16_t numSamples, uint16_t sampleInterval, float currentOffset) {
     unsigned long currentTime;
     float currentSampleSum = 0;
     float currentSampleCount = 0;
@@ -65,8 +68,9 @@ float HSTS016L_ReadDCCurrent(HSTS016L_Config_t *config, uint16_t numSamples, uin
         currentPinRead = analogRead(config->currentPin);
         calibPinRead = analogRead(config->calibPin);
 
-        float currentFiltered = HSTS016L_KalmanUpdateCurrent(config, currentPinRead);
-        float calibFiltered = HSTS016L_KalmanUpdateCalib(config, calibPinRead);
+        currentFiltered = HSTS016L_KalmanUpdateCurrent(config, currentPinRead);
+        calibFiltered = HSTS016L_KalmanUpdateCalib(config, calibPinRead);
+        
 
         currentSampleRead = abs(currentFiltered - calibFiltered);
         currentSampleSum += currentSampleRead;
@@ -76,12 +80,7 @@ float HSTS016L_ReadDCCurrent(HSTS016L_Config_t *config, uint16_t numSamples, uin
     }
 
     float currentMean = currentSampleSum / currentSampleCount;
-    finalDCCurrent = (((currentMean / ADC_RESOLUTION) * SUPPLY_VOLTAGE) / MV_PER_AMP) - analogOffset;
-
-    if (finalDCCurrent <= (2100 / MV_PER_AMP / 100))
-    {
-      finalDCCurrent = 0;
-    }
+    finalDCCurrent = (((currentMean / ADC_RESOLUTION) * SUPPLY_VOLTAGE) / MV_PER_AMP) - currentOffset;
 
     return finalDCCurrent;
 }

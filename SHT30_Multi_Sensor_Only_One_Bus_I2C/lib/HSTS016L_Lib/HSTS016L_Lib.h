@@ -8,11 +8,14 @@
 
 #include <Arduino.h>
 
-#define DEFAULT_R 1000
+#define DEFAULT_R 100
 #define DEFAULT_Q 0.1
 #define ADC_RESOLUTION 4095
 #define SUPPLY_VOLTAGE 3300
 #define MV_PER_AMP 12.5
+
+extern float currentFiltered;
+extern float calibFiltered;
 
 typedef struct
 {
@@ -36,6 +39,6 @@ extern void HSTS016L_InitKalmanState(HSTS016L_Config_t *config, uint16_t initCur
 extern float HSTS016L_KalmanUpdateCurrent(HSTS016L_Config_t *config, uint16_t inputData);
 extern float HSTS016L_KalmanUpdateCalib(HSTS016L_Config_t *config, uint16_t inputData);
 
-extern float HSTS016L_ReadDCCurrent(HSTS016L_Config_t *config, uint16_t numSamples, uint16_t sampleInterval, float analogOffset);
+extern float HSTS016L_ReadDCCurrent(HSTS016L_Config_t *config, uint16_t numSamples, uint16_t sampleInterval, float currentOffset);
 
 #endif

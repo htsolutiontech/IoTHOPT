@@ -6,7 +6,7 @@
 extern const char *ssid;
 extern const char *password;
 
-extern void set_Up_Wifi();
+extern void Wifi_Init();
 
 #endif // ___Realtime_EEPROM___
 
