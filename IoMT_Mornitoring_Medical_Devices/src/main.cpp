@@ -10,7 +10,7 @@ void setup()
 
   EEPROM_Setup();
 
-  check_Reboot_Task();
+  // check_Reboot_Task();
 
   SHT30_Setup();
 
@@ -27,11 +27,12 @@ void setup()
   buzzer_Setup();
 
   displayActiveTime();
+
 }
 
 void loop()
 {
-  
+
   if (_updateLampStateInterval >= updateLampStateInterval)
   {
     update_Lamp_State();
@@ -56,7 +57,7 @@ void loop()
 
   update_Data_To_Server();
 
-  // print_All_Data();
+  // // print_All_Data();
 
-  delay(20000);
+  delay(5000);
 }

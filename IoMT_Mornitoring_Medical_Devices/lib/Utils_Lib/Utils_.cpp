@@ -12,9 +12,6 @@ void oled_Animation_Task()
 {
   countOledAnimation++;
 
-  // Serial.print("countOledAnimation: ");
-  // Serial.println(countOledAnimation);
-
   if (countOledAnimation >= 5)
   {
     oled_Animation();
@@ -85,7 +82,7 @@ void read_And_Check_Current()
   nowCurrent = HSTS016L_ReadDCCurrent(&HST016L_SENSOR, NUM_SAMPLES, SAMPLE_INTERVAL, CURRENT_OFFSET);
   nowPower = nowCurrent * OPR_VOLTAGE;
 
-  if (nowCurrent <= OPR_CURRENT_THRESHOLD)
+  if (nowCurrent < OPR_CURRENT_THRESHOLD)
   {
     nowCurrent = 0.0;
     nowPower = 0.0;
@@ -100,6 +97,14 @@ void read_And_Check_Current()
     if (!buzzerState)
     {
       sendSMS(NUMBER_PHONE, POWER_WARNING);
+      delay(10);
+      sendSMS(DAT_SDT, POWER_WARNING);
+      delay(10);
+      sendSMS(ANH_THUONG, POWER_WARNING);
+      delay(10);
+      sendSMS(ANH_NHAN_NHO, POWER_WARNING);
+      delay(10);
+      sendSMS(PHUONG_SDT, POWER_WARNING);
       buzzer_Warning();
       buzzerState = true;
     }
@@ -141,6 +146,14 @@ void read_Temp_And_Humi()
     if (!tempState)
     {
       sendSMS(NUMBER_PHONE, TEMP_WARNING);
+      delay(10);
+      sendSMS(DAT_SDT, TEMP_WARNING);
+      delay(10);
+      sendSMS(ANH_THUONG, TEMP_WARNING);
+      delay(10);
+      sendSMS(ANH_NHAN_NHO, TEMP_WARNING);
+      delay(10);
+      sendSMS(PHUONG_SDT, TEMP_WARNING);
       buzzer_Warning();
       tempState = true;
     }
@@ -191,10 +204,6 @@ void print_All_Data()
 {
 
   Serial.println("Updated Time: " + currentTime);
-
-  Serial.print("_updateLampStateInterval Current: ");
-  Serial.print(_updateLampStateInterval);
-  Serial.println(" s ");
 
   Serial.print(F("Now Current: "));
   Serial.print(nowCurrent);
@@ -268,14 +277,14 @@ void connectToWiFi()
       // Serial.print(".");
     }
 
-    if (WiFi.status() == WL_CONNECTED)
-    {
-      // Serial.println("\nConnected to WiFi");
-    }
-    else
-    {
-      // Serial.println("\nFailed to connect to WiFi");
-    }
+    // if (WiFi.status() == WL_CONNECTED)
+    // {
+    //   // Serial.println("\nConnected to WiFi");
+    // }
+    // else
+    // {
+    //   // Serial.println("\nFailed to connect to WiFi");
+    // }
   }
 }
 
@@ -286,11 +295,11 @@ void update_Data_To_Server()
   // Serial.print("Check Heap Map: ");
   // Serial.println(ESP.getFreeHeap());
 
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    // Serial.println("Skipping data upload: No WiFi connection.");
-    return;
-  }
+  // if (WiFi.status() != WL_CONNECTED)
+  // {
+  //   // Serial.println("Skipping data upload: No WiFi connection.");
+  //   return;
+  // }
 
   currentTime = get_Current_Time();
 

@@ -20,12 +20,12 @@ void sendATCommand(const char* cmd, const char* expectedResponse, unsigned long 
       break; 
     }
   }
-  Serial.println(response);  //phản hồi từ module SIM
+  // Serial.println(response);  //phản hồi từ module SIM
 
-  if (responseOK)
-    Serial.println("Response OK");
-  else
-    Serial.println("Timeout without expected Response");
+  // if (responseOK)
+  //   Serial.println("Response OK");
+  // else
+  //   Serial.println("Timeout without expected Response");
 }
 
 
@@ -47,6 +47,5 @@ void SIM_Setup()
 
   sendATCommand("AT+CGMM", "OK", 1000); // Kiểm tra kết nối với module SIM
   sendATCommand("AT+CMGF=1", "OK", 1000); // Đặt chế độ SMS là văn bản
-
-//   sendSMS(NUMBER_PHONE, POWER_WARNING);
+  
 }
